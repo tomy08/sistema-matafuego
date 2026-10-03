@@ -1,0 +1,415 @@
+{
+  "id": "a1ab1190-0d44-4297-930c-acf42c80c7f3",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.edificios": {
+      "name": "edificios",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "direccion": {
+          "name": "direccion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "administrador_email": {
+          "name": "administrador_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "umbral_vencido_dias": {
+          "name": "umbral_vencido_dias",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 30
+        },
+        "umbral_proximo_60_dias": {
+          "name": "umbral_proximo_60_dias",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 60
+        },
+        "umbral_proximo_90_dias": {
+          "name": "umbral_proximo_90_dias",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 90
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.extintores": {
+      "name": "extintores",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "edificio_id": {
+          "name": "edificio_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ubicacion_interna": {
+          "name": "ubicacion_interna",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nro_extintor": {
+          "name": "nro_extintor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nro_tarjeta": {
+          "name": "nro_tarjeta",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nro_serie": {
+          "name": "nro_serie",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agente": {
+          "name": "agente",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "capacidad": {
+          "name": "capacidad",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fabricante": {
+          "name": "fabricante",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recargadora": {
+          "name": "recargadora",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uso": {
+          "name": "uso",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_mantenimiento": {
+          "name": "fecha_mantenimiento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "venc_mantenimiento": {
+          "name": "venc_mantenimiento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_fabricacion": {
+          "name": "fecha_fabricacion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "venc_vida_util": {
+          "name": "venc_vida_util",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "venc_ph": {
+          "name": "venc_ph",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_mantenimiento_estimada": {
+          "name": "fecha_mantenimiento_estimada",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "venc_mantenimiento_estimada": {
+          "name": "venc_mantenimiento_estimada",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fecha_fabricacion_estimada": {
+          "name": "fecha_fabricacion_estimada",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "venc_vida_util_estimada": {
+          "name": "venc_vida_util_estimada",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "venc_ph_estimada": {
+          "name": "venc_ph_estimada",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "color_marbete": {
+          "name": "color_marbete",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "url_qr": {
+          "name": "url_qr",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado_verificacion": {
+          "name": "estado_verificacion",
+          "type": "estado_verificacion",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'no_verificado'"
+        },
+        "origen": {
+          "name": "origen",
+          "type": "origen_extintor",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual'"
+        },
+        "datos_agc_crudos": {
+          "name": "datos_agc_crudos",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "extintores_edificio_id_edificios_id_fk": {
+          "name": "extintores_edificio_id_edificios_id_fk",
+          "tableFrom": "extintores",
+          "tableTo": "edificios",
+          "columnsFrom": [
+            "edificio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.inspecciones_visuales": {
+      "name": "inspecciones_visuales",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "extintor_id": {
+          "name": "extintor_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "manometro": {
+          "name": "manometro",
+          "type": "manometro",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "precinto_intacto": {
+          "name": "precinto_intacto",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado_cilindro": {
+          "name": "estado_cilindro",
+          "type": "estado_cilindro",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "inspecciones_visuales_extintor_id_extintores_id_fk": {
+          "name": "inspecciones_visuales_extintor_id_extintores_id_fk",
+          "tableFrom": "inspecciones_visuales",
+          "tableTo": "extintores",
+          "columnsFrom": [
+            "extintor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.estado_cilindro": {
+      "name": "estado_cilindro",
+      "schema": "public",
+      "values": [
+        "bueno",
+        "corrosion",
+        "golpes",
+        "danado"
+      ]
+    },
+    "public.estado_verificacion": {
+      "name": "estado_verificacion",
+      "schema": "public",
+      "values": [
+        "verificado",
+        "no_verificado",
+        "estimado",
+        "sin_datos"
+      ]
+    },
+    "public.manometro": {
+      "name": "manometro",
+      "schema": "public",
+      "values": [
+        "en_verde",
+        "fuera_de_rango",
+        "no_tiene"
+      ]
+    },
+    "public.origen_extintor": {
+      "name": "origen_extintor",
+      "schema": "public",
+      "values": [
+        "qr",
+        "ocr",
+        "manual",
+        "marbete"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
