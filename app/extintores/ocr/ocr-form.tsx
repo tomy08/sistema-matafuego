@@ -54,11 +54,9 @@ export default function OcrForm({
     setError(null);
     try {
       const Tesseract = await import("tesseract.js");
-      const base = window.location.origin;
+      // Sin workerPath/corePath/langPath custom: usa CDN oficial jsdelivr
+      // (el /api/tesseract local no existe en Vercel y tira NetworkError).
       const resultado = await Tesseract.recognize(file, "spa", {
-        workerPath: `${base}/api/tesseract/worker.min.js`,
-        corePath: `${base}/api/tesseract/core`,
-        langPath: `${base}/api/tesseract/lang`,
         logger: (m: { status: string; progress: number }) => {
           if (m.status === "recognizing text") {
             setEstadoOcr(null);
