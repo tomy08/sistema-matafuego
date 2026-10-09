@@ -7,6 +7,7 @@ import {
   inferirAnioPorColor,
   normalizarColorMarbete,
   validarAnioMarbeteOpcional,
+  validarCoherenciaColorAnio,
 } from "@/lib/marbete";
 import { edificios, extintores } from "@/lib/schema";
 import { and, eq } from "drizzle-orm";
@@ -37,10 +38,11 @@ export async function crearExtintorMarbete(formData: FormData) {
   if (!ubicacionInterna) throw new Error("La ubicación interna es obligatoria.");
 
   const colorMarbete = normalizarColorMarbete(String(formData.get("colorMarbete") ?? ""));
-  // Año opcional: si no lo sabés, lo inferimos por color cuando es seguro
-  // (hoy: violeta = 2026). Si no se puede inferir, se guarda sin fechas
-  // como sin_datos hasta conciliación.
+  // Tabla oficial IRAM: el color define la terminación del año.
+  // Si no indicás año, inferimos el más reciente (ej violeta->2026).
+  // Si lo indicás, validamos que coincida con el color.
   const anioIngresado = validarAnioMarbeteOpcional(formData.get("anioMarbete"));
+  if (anioIngresado !== null) validarCoherenciaColorAnio(colorMarbete, anioIngresado);
   const anio = anioIngresado ?? inferirAnioPorColor(colorMarbete);
   const estimado = anio ? estimarFechasPorAnioMarbete(anio) : null;
 

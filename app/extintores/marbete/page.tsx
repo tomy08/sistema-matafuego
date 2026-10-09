@@ -47,13 +47,14 @@ export default async function MarbetePage({
       <h1 className="mt-2 text-2xl font-semibold">Alta sin etiquetas (por marbete)</h1>
       <p className="mt-1 text-sm text-slate-600">
         Cuando no hay tarjeta ni etiqueta legible y <strong>no sabés el año</strong>.
-        Alcanza con el color del aro del cuello + ubicación: lo guardamos y después lo conciliás.
-        Si sabés el año, lo estimamos (enero año → enero año+1).
+        Alcanza con el color del aro del cuello + ubicación: deducimos el año por tabla IRAM
+        (el color se repite cada 10 años, tomamos el más reciente).
       </p>
-      <p className="mt-2 rounded-lg bg-violet-50 p-2 text-xs text-violet-900">
-        Dato confirmado: violeta = 2026. Si elegís violeta sin año, estimamos 2026→2027 solo.
-        Otros colores sin año se guardan como “Sin datos” hasta que concilies la etiqueta.
-      </p>
+      <div className="mt-2 rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
+        <p className="font-medium">Tabla oficial (terminación del año):</p>
+        <p className="mt-1">1 Negro · 2 Amarillo · 3 Celeste · 4 Verde oscuro · 5 Azul · 6 Violeta/Lila · 7 Blanco · 8 Verde claro · 9 Naranja · 0 Marrón claro</p>
+        <p className="mt-1 text-slate-500">Ej: violeta → 2026, azul → 2025, verde oscuro → 2024. Si el equipo hace años no se recarga (ej violeta de 2016), indicá el año exacto abajo.</p>
+      </div>
       <form action={crearExtintorMarbete} className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -81,9 +82,9 @@ export default async function MarbetePage({
             </select>
           </div>
           <div>
-            <label htmlFor="anioMarbete" className="block text-sm font-medium text-slate-700">Año del marbete (opcional)</label>
-            <input id="anioMarbete" name="anioMarbete" type="number" min={1980} max={2100} placeholder="Vacío si no lo sabés" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
-            <p className="mt-1 text-xs text-slate-500">Dejalo vacío si no lo sabés. Solo violeta se deduce solo (2026).</p>
+            <label htmlFor="anioMarbete" className="block text-sm font-medium text-slate-700">Año exacto (opcional)</label>
+            <input id="anioMarbete" name="anioMarbete" type="number" min={1980} max={2100} placeholder="Vacío = deducimos por color" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            <p className="mt-1 text-xs text-slate-500">Vacío si no lo sabés. Si lo ponés, debe coincidir con el color (ej violeta → ...6).</p>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
