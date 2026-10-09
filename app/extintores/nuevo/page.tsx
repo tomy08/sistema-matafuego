@@ -8,13 +8,24 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { crearExtintorManual } from "./actions";
 
-export default async function NuevoExtintorPage() {
+export default async function NuevoExtintorPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ edificioId?: string }>;
+}) {
   const session = await auth();
   const email = session?.user?.email;
 
   if (!email) {
     redirect("/login");
   }
+
+  const { edificioId: edificioIdQuery } = (await searchParams) ?? {};
+  const edificioPreseleccionado = Number(edificioIdQuery);
+  const tienePreseleccion =
+    Number.isInteger(edificioPreseleccionado) && edificioPreseleccionado > 0
+      ? edificioPreseleccionado
+      : null;
 
   const edificiosDelUsuario = await db
     .select({ id: edificios.id, nombre: edificios.nombre, direccion: edificios.direccion })
@@ -49,7 +60,7 @@ export default async function NuevoExtintorPage() {
       <form action={crearExtintorManual} className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
         <div>
           <label htmlFor="edificioId" className="block text-sm font-medium text-slate-700">Edificio</label>
-          <select id="edificioId" name="edificioId" required className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+          <select id="edificioId" name="edificioId" required defaultValue={tienePreseleccion ?? ""} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
             <option value="">Seleccionar…</option>
             {edificiosDelUsuario.map((edificio) => (
               <option key={edificio.id} value={edificio.id}>

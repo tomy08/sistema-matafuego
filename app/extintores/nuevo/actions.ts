@@ -3,7 +3,8 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { parseMonthYearInput } from "@/lib/date-parsing";
-import { extintores } from "@/lib/schema";
+import { edificios, extintores } from "@/lib/schema";
+import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 function toNullableText(value: FormDataEntryValue | null) {
@@ -29,6 +30,19 @@ export async function crearExtintorManual(formData: FormData) {
   }
 
   const edificioId = parseBuildingId(formData.get("edificioId"));
+  const propio = await db
+    .select({ id: edificios.id })
+    .from(edificios)
+    .where(
+      and(
+        eq(edificios.id, edificioId),
+        eq(edificios.administradorEmail, session.user.email),
+      ),
+    )
+    .limit(1);
+  if (!propio.length) {
+    throw new Error("Edificio inválido.");
+  }
   const ubicacionInterna = String(formData.get("ubicacionInterna") ?? "").trim();
   const agente = String(formData.get("agente") ?? "").trim();
   const capacidad = String(formData.get("capacidad") ?? "").trim();
