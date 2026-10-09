@@ -4,8 +4,9 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import {
   estimarFechasPorAnioMarbete,
+  inferirAnioPorColor,
   normalizarColorMarbete,
-  validarAnioMarbete,
+  validarAnioMarbeteOpcional,
 } from "@/lib/marbete";
 import { edificios, extintores } from "@/lib/schema";
 import { and, eq } from "drizzle-orm";
@@ -36,8 +37,12 @@ export async function crearExtintorMarbete(formData: FormData) {
   if (!ubicacionInterna) throw new Error("La ubicación interna es obligatoria.");
 
   const colorMarbete = normalizarColorMarbete(String(formData.get("colorMarbete") ?? ""));
-  const anio = validarAnioMarbete(formData.get("anioMarbete"));
-  const estimado = estimarFechasPorAnioMarbete(anio);
+  // Año opcional: si no lo sabés, lo inferimos por color cuando es seguro
+  // (hoy: violeta = 2026). Si no se puede inferir, se guarda sin fechas
+  // como sin_datos hasta conciliación.
+  const anioIngresado = validarAnioMarbeteOpcional(formData.get("anioMarbete"));
+  const anio = anioIngresado ?? inferirAnioPorColor(colorMarbete);
+  const estimado = anio ? estimarFechasPorAnioMarbete(anio) : null;
 
   await db.insert(extintores).values({
     edificioId,
@@ -45,12 +50,14 @@ export async function crearExtintorMarbete(formData: FormData) {
     agente: textoNullable(formData.get("agente")) ?? "Sin datos",
     capacidad: textoNullable(formData.get("capacidad")) ?? "Sin datos",
     nroExtintor: textoNullable(formData.get("nroExtintor")),
-    colorMarbete,
-    fechaMantenimiento: estimado.fechaMantenimiento,
-    vencMantenimiento: estimado.vencMantenimiento,
-    fechaMantenimientoEstimada: true,
-    vencMantenimientoEstimada: true,
-    estadoVerificacion: "estimado",
+    colorMarbete: anio
+      ? `${colorMarbete} (${anio})`
+      : colorMarbete,
+    fechaMantenimiento: estimado?.fechaMantenimiento ?? null,
+    vencMantenimiento: estimado?.vencMantenimiento ?? null,
+    fechaMantenimientoEstimada: estimado ? true : false,
+    vencMantenimientoEstimada: estimado ? true : false,
+    estadoVerificacion: estimado ? "estimado" : "sin_datos",
     origen: "marbete",
   });
 

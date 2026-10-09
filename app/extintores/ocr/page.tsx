@@ -43,10 +43,10 @@ export default async function OcrPage({
   return (
     <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
       <Link href="/" className="text-sm text-blue-600 hover:underline">← Volver</Link>
-      <h1 className="mt-2 text-2xl font-semibold">Alta por OCR + conciliación</h1>
+      <h1 className="mt-2 text-2xl font-semibold">Alta por foto (OCR automático)</h1>
       <p className="mt-1 text-sm text-slate-600">
-        Sacá una foto a la etiqueta. El OCR corre 100% en tu dispositivo (gratis) y te sugiere los
-        campos: vos conciliás y guardás.
+        Sacá foto con la cámara o subí imagen: leemos agente, capacidad, fechas y tarjeta solos.
+        Vos solo elegís edificio y ubicación. Corre 100% en tu dispositivo (gratis).
       </p>
       <div className="mt-6">
         <OcrForm edificios={lista} edificioPreseleccionado={edificioPreseleccionado} />

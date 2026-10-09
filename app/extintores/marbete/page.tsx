@@ -41,15 +41,18 @@ export default async function MarbetePage({
     );
   }
 
-  const anioActual = new Date().getFullYear();
-
   return (
     <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
       <Link href="/" className="text-sm text-blue-600 hover:underline">← Volver</Link>
       <h1 className="mt-2 text-2xl font-semibold">Alta sin etiquetas (por marbete)</h1>
       <p className="mt-1 text-sm text-slate-600">
-        Cuando no hay tarjeta ni etiqueta legible. Se estima mantenimiento en enero del año del
-        marbete y vencimiento un año después. Queda marcado como estimado.
+        Cuando no hay tarjeta ni etiqueta legible y <strong>no sabés el año</strong>.
+        Alcanza con el color del aro del cuello + ubicación: lo guardamos y después lo conciliás.
+        Si sabés el año, lo estimamos (enero año → enero año+1).
+      </p>
+      <p className="mt-2 rounded-lg bg-violet-50 p-2 text-xs text-violet-900">
+        Dato confirmado: violeta = 2026. Si elegís violeta sin año, estimamos 2026→2027 solo.
+        Otros colores sin año se guardan como “Sin datos” hasta que concilies la etiqueta.
       </p>
       <form action={crearExtintorMarbete} className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -78,8 +81,9 @@ export default async function MarbetePage({
             </select>
           </div>
           <div>
-            <label htmlFor="anioMarbete" className="block text-sm font-medium text-slate-700">Año del marbete</label>
-            <input id="anioMarbete" name="anioMarbete" type="number" min={1980} max={2100} defaultValue={anioActual} required className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            <label htmlFor="anioMarbete" className="block text-sm font-medium text-slate-700">Año del marbete (opcional)</label>
+            <input id="anioMarbete" name="anioMarbete" type="number" min={1980} max={2100} placeholder="Vacío si no lo sabés" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            <p className="mt-1 text-xs text-slate-500">Dejalo vacío si no lo sabés. Solo violeta se deduce solo (2026).</p>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -97,7 +101,7 @@ export default async function MarbetePage({
           </div>
         </div>
         <button type="submit" className="w-full rounded-lg bg-amber-600 px-4 py-2.5 text-white hover:bg-amber-500 sm:w-auto">
-          Guardar estimado por marbete
+          Guardar por marbete
         </button>
       </form>
     </main>
