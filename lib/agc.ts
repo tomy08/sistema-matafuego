@@ -49,6 +49,11 @@ export function decodeAgcParam(hexValue: string): string {
   }
 }
 
+/**
+ * Valida y normaliza la URL escaneada del QR de AGC.
+ * Los QR vienen en formatos distintos (http://www…:80/…, mayúsculas, etc.);
+ * se canonicaliza a https://dghpsh.agcontrol.gob.ar/matafuegos/datosEstampilla.jsp?…
+ */
 export function validarUrlAgc(raw: string): URL {
   let url: URL;
   try {
@@ -59,10 +64,12 @@ export function validarUrlAgc(raw: string): URL {
   if (url.protocol !== "https:" && url.protocol !== "http:") {
     throw new Error("La URL del QR debe ser http(s).");
   }
-  if (url.hostname.toLowerCase() !== AGC_HOST) {
+  let host = url.hostname.toLowerCase();
+  if (host.startsWith("www.")) host = host.slice(4);
+  if (host !== AGC_HOST) {
     throw new Error(`Host no permitido. Se esperaba ${AGC_HOST}.`);
   }
-  if (!url.pathname.endsWith("datosEstampilla.jsp")) {
+  if (!url.pathname.toLowerCase().endsWith("datosestampilla.jsp")) {
     throw new Error("La URL no es una ficha AGC de matafuegos.");
   }
   if (
@@ -72,7 +79,11 @@ export function validarUrlAgc(raw: string): URL {
   ) {
     throw new Error("La URL AGC no trae los parámetros p_tarjeta/p_var/p_var2.");
   }
-  return url;
+  const canonica = new URL(`https://${AGC_HOST}${AGC_PATH}`);
+  url.searchParams.forEach((valor, clave) => {
+    canonica.searchParams.set(clave, valor);
+  });
+  return canonica;
 }
 
 function decodeHtmlEntities(value: string): string {

@@ -15,6 +15,7 @@ export default function OcrForm({
 }) {
   const [procesando, setProcesando] = useState(false);
   const [progreso, setProgreso] = useState(0);
+  const [estadoOcr, setEstadoOcr] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [texto, setTexto] = useState("");
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
@@ -49,12 +50,30 @@ export default function OcrForm({
   async function procesar(file: File) {
     setProcesando(true);
     setProgreso(0);
+    setEstadoOcr(null);
     setError(null);
     try {
       const Tesseract = await import("tesseract.js");
+      const base = window.location.origin;
       const resultado = await Tesseract.recognize(file, "spa", {
+        workerPath: `${base}/api/tesseract/worker.min.js`,
+        corePath: `${base}/api/tesseract/core`,
+        langPath: `${base}/api/tesseract/lang`,
         logger: (m: { status: string; progress: number }) => {
-          if (m.status === "recognizing text") setProgreso(Math.round((m.progress ?? 0) * 100));
+          if (m.status === "recognizing text") {
+            setEstadoOcr(null);
+            setProgreso(Math.round((m.progress ?? 0) * 100));
+          } else {
+            setEstadoOcr(
+              m.status === "loading tesseract core"
+                ? "Cargando motor OCR…"
+                : m.status === "loading language traineddata"
+                  ? "Cargando diccionario español…"
+                  : m.status === "initializing tesseract" || m.status === "initializing api"
+                    ? "Inicializando OCR…"
+                    : null,
+            );
+          }
         },
       });
       const crudo = resultado?.data?.text ?? "";
@@ -76,10 +95,12 @@ export default function OcrForm({
         vencMantenimiento: s.fechas[1] ?? f.vencMantenimiento,
         vencPh: s.fechas[2] ?? f.vencPh,
       }));
-    } catch {
-      setError("No se pudo procesar la imagen. Probá con mejor luz y foco.");
+    } catch (e) {
+      const detalle = e instanceof Error ? e.message : String(e);
+      setError(`No se pudo procesar la imagen: ${detalle}`);
     } finally {
       setProcesando(false);
+      setEstadoOcr(null);
     }
   }
 
@@ -219,7 +240,11 @@ export default function OcrForm({
         )}
 
         {procesando && (
-          <p className="mt-2 text-sm text-slate-600">Leyendo etiqueta… {progreso}% (todo local, gratis)</p>
+          <p className="mt-2 text-sm text-slate-600">
+            {estadoOcr
+              ? `${estadoOcr} (todo local, gratis)`
+              : `Leyendo etiqueta… ${progreso}% (todo local, gratis)`}
+          </p>
         )}
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         {listo && (

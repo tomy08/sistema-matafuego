@@ -26,10 +26,33 @@ describe("agc", () => {
     expect(() =>
       validarUrlAgc("https://evil.com/matafuegos/datosEstampilla.jsp?p_tarjeta=a&p_var=b&p_var2=c"),
     ).toThrow();
+    expect(() =>
+      validarUrlAgc("https://www.evil.com/matafuegos/datosEstampilla.jsp?p_tarjeta=a&p_var=b&p_var2=c"),
+    ).toThrow();
     const url = validarUrlAgc(
       "https://dghpsh.agcontrol.gob.ar/matafuegos/datosEstampilla.jsp?p_tarjeta=4d5459324e4449774d544d3d&p_var=4d5459324e444d784e7a553d&p_var2=4f5467314e4441344e513d3d",
     );
     expect(url.hostname).toBe("dghpsh.agcontrol.gob.ar");
+  });
+
+  it("normaliza el QR con www, puerto :80 y http a la URL canónica", () => {
+    const url = validarUrlAgc(
+      "http://www.dghpsh.agcontrol.gob.ar:80/matafuegos/datosEstampilla.jsp?p_tarjeta=4d7a63304f4467774d513d3d&p_var=4d7a63304f4463324d513d3d&p_var2=4d5459774d7a41334d773d3d",
+    );
+    expect(url.toString()).toBe(
+      "https://dghpsh.agcontrol.gob.ar/matafuegos/datosEstampilla.jsp?p_tarjeta=4d7a63304f4467774d513d3d&p_var=4d7a63304f4463324d513d3d&p_var2=4d5459774d7a41334d773d3d",
+    );
+  });
+
+  it("mantiene los parámetros y acepta https sin www", () => {
+    const url = validarUrlAgc(
+      "https://dghpsh.agcontrol.gob.ar/matafuegos/datosEstampilla.jsp?p_var2=x&p_tarjeta=y&p_var=z",
+    );
+    expect(url.searchParams.get("p_tarjeta")).toBe("y");
+    expect(url.searchParams.get("p_var")).toBe("z");
+    expect(url.searchParams.get("p_var2")).toBe("x");
+    expect(url.port).toBe("");
+    expect(url.protocol).toBe("https:");
   });
 
   it("parsea el HTML real de AGC", () => {
