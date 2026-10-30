@@ -1,5 +1,6 @@
 "use client";
 
+import type { Conector, Plano } from "@/lib/planos";
 import { NIVEL_META, type NivelVencimiento } from "@/lib/vencimientos";
 import Image from "next/image";
 import Link from "next/link";
@@ -33,6 +34,8 @@ type Arrastre = {
 
 // Distancia mínima (px) para considerar que el usuario arrastra y no hace click.
 const UMBRAL_ARRASTRE = 5;
+// Al soltar a menos de esta distancia (px) de un conector libre, el extintor se engancha ahí.
+const RADIO_ENGANCHE = 28;
 const ANCHO_TOOLTIP = 256;
 
 const COLOR_MARCADOR: Record<NivelVencimiento, string> = {
@@ -46,11 +49,13 @@ const COLOR_MARCADOR: Record<NivelVencimiento, string> = {
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
+const mismaPosicion = (a: Posicion, b: Posicion) => Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5;
+
 export function MapaExtintores({
-  planoSrc,
+  plano,
   extintores,
 }: {
-  planoSrc: string;
+  plano: Plano;
   extintores: ExtintorEnMapa[];
 }) {
   const ordenados = [...extintores].sort((a, b) => a.id - b.id);
@@ -62,6 +67,10 @@ export function MapaExtintores({
     ),
   );
   const [seleccionado, setSeleccionado] = useState<number | null>(null);
+  // Colocación por clicks, en cualquier orden: extintor de la lista + conector del plano.
+  const [aColocar, setAColocar] = useState<number | null>(null);
+  const [conectorElegido, setConectorElegido] = useState<string | null>(null);
+  const [conectorObjetivo, setConectorObjetivo] = useState<string | null>(null);
   const [arrastrandoId, setArrastrandoId] = useState<number | null>(null);
   const [fantasma, setFantasma] = useState<{ id: number; x: number; y: number } | null>(null);
   const [pendientes, setPendientes] = useState(0);
@@ -82,7 +91,10 @@ export function MapaExtintores({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSeleccionado(null);
+      if (e.key !== "Escape") return;
+      setSeleccionado(null);
+      setAColocar(null);
+      setConectorElegido(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -102,6 +114,35 @@ export function MapaExtintores({
     return (
       clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
     );
+  }
+
+  function conectorOcupado(c: Conector, salvoId: number | null) {
+    return Object.entries(posiciones).some(
+      ([id, pos]) => pos && Number(id) !== salvoId && mismaPosicion(pos, c),
+    );
+  }
+
+  function conectorCercano(clientX: number, clientY: number, salvoId: number): Conector | null {
+    const rect = mapaRef.current!.getBoundingClientRect();
+    let mejor: Conector | null = null;
+    let mejorDist = RADIO_ENGANCHE;
+    for (const c of plano.conectores) {
+      if (conectorOcupado(c, salvoId)) continue;
+      const dist = Math.hypot(
+        rect.left + (c.x / 100) * rect.width - clientX,
+        rect.top + (c.y / 100) * rect.height - clientY,
+      );
+      if (dist <= mejorDist) {
+        mejor = c;
+        mejorDist = dist;
+      }
+    }
+    return mejor;
+  }
+
+  function posicionEnganchada(clientX: number, clientY: number, id: number): Posicion {
+    const c = conectorCercano(clientX, clientY, id);
+    return c ? { x: c.x, y: c.y } : posicionEnMapa(clientX, clientY);
   }
 
   async function colocar(id: number, pos: Posicion | null, anterior: Posicion | null) {
@@ -140,7 +181,12 @@ export function MapaExtintores({
       a.movido = true;
       setArrastrandoId(a.id);
       setSeleccionado(null);
+      setAColocar(null);
+      setConectorElegido(null);
     }
+    setConectorObjetivo(
+      dentroDelMapa(e.clientX, e.clientY) ? (conectorCercano(e.clientX, e.clientY, a.id)?.id ?? null) : null,
+    );
     if (a.desdeLista) {
       setFantasma({ id: a.id, x: e.clientX, y: e.clientY });
     } else {
@@ -156,13 +202,9 @@ export function MapaExtintores({
     suprimirClickRef.current = true;
     setArrastrandoId(null);
     setFantasma(null);
-    if (a.desdeLista) {
-      if (dentroDelMapa(e.clientX, e.clientY)) {
-        void colocar(a.id, posicionEnMapa(e.clientX, e.clientY), a.anterior);
-      }
-    } else {
-      void colocar(a.id, posicionEnMapa(e.clientX, e.clientY), a.anterior);
-    }
+    setConectorObjetivo(null);
+    if (a.desdeLista && !dentroDelMapa(e.clientX, e.clientY)) return;
+    void colocar(a.id, posicionEnganchada(e.clientX, e.clientY, a.id), a.anterior);
   }
 
   function cancelarArrastre() {
@@ -170,6 +212,7 @@ export function MapaExtintores({
     arrastreRef.current = null;
     setArrastrandoId(null);
     setFantasma(null);
+    setConectorObjetivo(null);
     if (a?.movido && !a.desdeLista) {
       setPosiciones((p) => ({ ...p, [a.id]: a.anterior }));
     }
@@ -188,17 +231,34 @@ export function MapaExtintores({
       suprimirClickRef.current = false;
       return;
     }
-    if (!posiciones[id]) {
-      // Sin arrastrar: lo dejamos en el centro del plano para moverlo desde ahí.
-      void colocar(id, { x: 50, y: 50 }, null);
+    const conector = plano.conectores.find((c) => c.id === conectorElegido);
+    if (conector) {
+      setConectorElegido(null);
+      void colocar(id, { x: conector.x, y: conector.y }, null);
+      setSeleccionado(id);
+      return;
     }
-    setSeleccionado(id);
+    setSeleccionado(null);
+    setAColocar((s) => (s === id ? null : id));
+  }
+
+  function clickEnConector(c: Conector) {
+    if (aColocar !== null) {
+      void colocar(aColocar, { x: c.x, y: c.y }, posiciones[aColocar] ?? null);
+      setSeleccionado(aColocar);
+      setAColocar(null);
+      return;
+    }
+    setSeleccionado(null);
+    setConectorElegido((s) => (s === c.id ? null : c.id));
   }
 
   const sinUbicar = ordenados.filter((x) => !posiciones[x.id]);
   const ubicados = ordenados.filter((x) => posiciones[x.id]);
   const extintorSeleccionado = ordenados.find((x) => x.id === seleccionado);
   const posSeleccionado = seleccionado !== null ? posiciones[seleccionado] : null;
+  const conectoresLibres = plano.conectores.filter((c) => !conectorOcupado(c, arrastrandoId));
+  const eligiendo = aColocar !== null || arrastrandoId !== null;
 
   return (
     <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_17rem]">
@@ -209,18 +269,46 @@ export function MapaExtintores({
           onClick={(e) => {
             if (e.target === e.currentTarget || e.target instanceof HTMLImageElement) {
               setSeleccionado(null);
+              setConectorElegido(null);
             }
           }}
         >
           <Image
-            src={planoSrc}
+            src={plano.src}
             alt="Plano del edificio"
-            width={855}
-            height={588}
+            width={plano.ancho}
+            height={plano.alto}
             priority
             draggable={false}
             className="block h-auto w-full rounded-lg"
           />
+
+          {conectoresLibres.map((c) => {
+            const resaltado = conectorElegido === c.id || conectorObjetivo === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                aria-label={aColocar !== null ? "Colocar el extintor en este punto" : "Punto para extintor"}
+                title={aColocar !== null ? "Colocar acá" : "Punto para extintor"}
+                onClick={() => clickEnConector(c)}
+                style={{ left: `${c.x}%`, top: `${c.y}%` }}
+                className={`absolute z-[5] flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full ${
+                  arrastrandoId !== null ? "pointer-events-none" : ""
+                }`}
+              >
+                <span
+                  className={`block rounded-full border-2 transition-all ${
+                    resaltado
+                      ? "h-7 w-7 border-slate-900 bg-slate-900/20"
+                      : eligiendo
+                        ? "h-6 w-6 animate-pulse border-sky-600 bg-sky-400/30"
+                        : "h-5 w-5 border-dashed border-slate-700/70 bg-white/40 hover:h-6 hover:w-6 hover:bg-white/70"
+                  }`}
+                />
+              </button>
+            );
+          })}
 
           {ubicados.map((x) => {
             const pos = posiciones[x.id]!;
@@ -238,7 +326,7 @@ export function MapaExtintores({
                 onPointerCancel={cancelarArrastre}
                 onClick={() => clickEnMarcador(x.id)}
                 style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                className={`absolute flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center rounded-full text-xs font-bold shadow-md ring-2 transition-transform ${
+                className={`absolute flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center rounded-full text-xs font-bold shadow-md ring-2 transition-transform before:absolute before:-inset-2 before:rounded-full before:content-[''] ${
                   COLOR_MARCADOR[x.nivel]
                 } ${activo ? "z-20 scale-125 ring-slate-900" : "z-10 ring-white hover:scale-110"} ${
                   arrastrando ? "z-30 scale-125 cursor-grabbing" : "cursor-grab"
@@ -281,7 +369,13 @@ export function MapaExtintores({
             <p className="mt-1 text-xs text-slate-500">Todos los extintores están en el mapa.</p>
           ) : (
             <>
-              <p className="mt-1 text-xs text-slate-500">Arrastralos al plano, o tocá uno para ponerlo en el centro.</p>
+              <p className="mt-1 text-xs text-slate-500">
+                {conectorElegido
+                  ? "Tocá el extintor que va en el punto marcado."
+                  : aColocar !== null
+                    ? "Ahora tocá un punto del plano para colocarlo."
+                    : "Tocá uno y después un punto del plano, o arrastralo hasta el punto."}
+              </p>
               <ul className="mt-2 space-y-1.5">
                 {sinUbicar.map((x) => (
                   <li key={x.id}>
@@ -292,9 +386,9 @@ export function MapaExtintores({
                       onPointerUp={terminarArrastre}
                       onPointerCancel={cancelarArrastre}
                       onClick={() => clickEnLista(x.id)}
-                      className={`flex w-full touch-none cursor-grab items-center gap-2 rounded-lg border border-dashed border-slate-300 p-2 text-left text-sm hover:bg-slate-50 ${
-                        arrastrandoId === x.id ? "opacity-40" : ""
-                      }`}
+                      className={`flex w-full touch-none cursor-grab items-center gap-2 rounded-lg border p-2 text-left text-sm hover:bg-slate-50 ${
+                        aColocar === x.id ? "border-sky-600 bg-sky-50" : "border-dashed border-slate-300"
+                      } ${arrastrandoId === x.id ? "opacity-40" : ""}`}
                     >
                       <Punto nivel={x.nivel} numero={numero.get(x.id)!} />
                       <span className="min-w-0 truncate">{x.ubicacionInterna}</span>

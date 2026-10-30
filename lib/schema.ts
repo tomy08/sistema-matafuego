@@ -5,6 +5,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  real,
   serial,
   text,
   timestamp,
@@ -88,6 +89,10 @@ export const extintores = pgTable("extintores", {
     .default("no_verificado"),
   origen: origenExtintorEnum("origen").notNull().default("manual"),
   datosAgcCrudos: jsonb("datos_agc_crudos"),
+  // Posición en el plano del edificio, en % (0-100) del ancho/alto de la imagen.
+  // null = todavía no ubicado en el mapa.
+  mapaX: real("mapa_x"),
+  mapaY: real("mapa_y"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

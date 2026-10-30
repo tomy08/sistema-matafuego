@@ -80,9 +80,10 @@ export default async function EdificioPage({
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <Link href={`/extintores/scan?edificioId=${edificio.id}`} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-500">Alta por QR</Link>
-        <Link href={`/extintores/ocr?edificioId=${edificio.id}`} className="rounded-lg bg-violet-600 px-4 py-2 text-sm text-white hover:bg-violet-500">Alta por OCR</Link>
+        <Link href={`/extintores/ocr?edificioId=${edificio.id}`} className="rounded-lg bg-violet-600 px-4 py-2 text-sm text-white hover:bg-violet-500">Alta por foto (IA)</Link>
         <Link href={`/extintores/marbete?edificioId=${edificio.id}`} className="rounded-lg bg-amber-600 px-4 py-2 text-sm text-white hover:bg-amber-500">Alta por marbete</Link>
         <Link href={`/extintores/nuevo?edificioId=${edificio.id}`} className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-500">Alta manual</Link>
+        <Link href={`/mapa?edificioId=${edificio.id}`} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100">Ver en el mapa</Link>
       </div>
       <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
         <h2 className="font-semibold">Extintores ({equipos.length})</h2>
